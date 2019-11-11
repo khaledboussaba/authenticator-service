@@ -42,13 +42,31 @@ public class AuthenticationManager {
 		}	
 	}
 
-	public static void initializeCredentials(String clearPassword, Credentials credentials) {
-		// TODO
+	public static void initializeCredentials(String clearPassword, Credentials credentials) throws AuthenticationException {
+		String salt = createSalt();
+		
+		String saltedPassword = clearPassword + salt;
+		
+		String hashedPassword = generateHash(saltedPassword);
+		
+		credentials.setSalt(salt);
+		credentials.setHashedPassword(hashedPassword);
+		logger.info("ClearPassword after adding salt : " + saltedPassword);
+		logger.info("Hash generated : " + credentials.getHashedPassword());
 	}
 	
-	public static boolean authenticate(String clearPassword, Credentials credentials) {
-		// TODO
-		return false;
+	public static boolean authenticate(String clearPassword, Credentials credentials) throws AuthenticationException {
+		String hashedPassword = generateHash(clearPassword + credentials.getSalt());
+		
+		boolean success = hashedPassword.equals(credentials.getHashedPassword());
+		
+		logger.info("Authentication attempt from " + credentials.getLogin() + " : " + (success ? "SUCCESS" : "FAILURE"));
+		
+		if (!success) {
+			throw new AuthenticationException("Echec d'authentification", credentials.getLogin(), null);
+		}
+		
+		return success;
 	}
 	
 }
